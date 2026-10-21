@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#10111b" />
+  <meta name="description" content="Grave sua voz em camadas, crie loops e exporte sua música. Simples e offline." />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="./audio-engine.js" defer></script>
+  <script src="./main.js" defer></script>
+  <title>VozLoop — Estúdio de bolso</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <button id="brandBtn" class="brand" aria-label="Voltar aos projetos" title="Projetos">
+        <span class="brand-logo" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span>voz<span class="brand-accent">loop</span><small>estúdio de bolso</small></span>
+      </button>
+      <div class="header-right">
+        <span class="local-pill"><span class="status-dot"></span> Salvo no dispositivo</span>
+        <button id="helpBtn" class="icon-button" aria-label="Ajuda" title="Ajuda">?</button>
+      </div>
+    </header>
+
+    <main id="homeView" class="home-view">
+      <section class="hero">
+        <div class="hero-eyebrow">SEU ESTÚDIO. SUAS REGRAS.</div>
+        <h1>Uma voz.<br/><span>Infinitas camadas.</span></h1>
+        <p>Grave sua melodia, ouça enquanto cria outra voz, faça loops e misture tudo. Sem conta, sem complicação.</p>
+        <button id="newProjectBtn" class="button button-primary button-large"><span aria-hidden="true">＋</span> Criar nova música</button>
+        <div class="hero-orbs" aria-hidden="true"><div class="orb orb-one"></div><div class="orb orb-two"></div><div class="orb orb-three"></div></div>
+      </section>
+      <section class="projects-section">
+        <div class="section-heading"><div><h2>Meus projetos</h2><p>Suas gravações ficam neste navegador.</p></div><span id="projectCount" class="section-counter">0 projetos</span></div>
+        <div id="projectsList" class="projects-list"></div>
+        <div class="home-tools"><button id="importBackupBtn" class="text-link">↥ Importar backup de projeto (.json)</button></div>
+      </section>
+      <section class="quick-start">
+        <div><span class="step-number">01</span><strong>Grave</strong><p>Solte a voz sem configurar nada.</p></div>
+        <div><span class="step-number">02</span><strong>Empilhe</strong><p>Ouça o que já gravou e crie novas camadas.</p></div>
+        <div><span class="step-number">03</span><strong>Compartilhe</strong><p>Ajuste o volume e exporte em WAV.</p></div>
+      </section>
+    </main>
+
+    <main id="studioView" class="studio-view hidden">
+      <div class="studio-topbar">
+        <button id="backBtn" class="text-button"><span aria-hidden="true">←</span> Projetos</button>
+        <div class="studio-actions">
+          <button id="backupBtn" class="small-button" title="Fazer cópia de segurança do projeto">Backup</button>
+          <button id="exportBtn" class="small-button small-button-primary">Exportar <span aria-hidden="true">↗</span></button>
+        </div>
+      </div>
+      <section class="studio-title-row">
+        <div class="title-group">
+          <div id="modeBadge" class="mode-badge">GRAVAÇÃO LIVRE</div>
+          <input id="projectName" class="project-name-input" aria-label="Nome do projeto" maxlength="70" placeholder="Minha música" />
+          <span id="saveIndicator" class="save-indicator" aria-live="polite">Salvo automaticamente</span>
+        </div>
+        <span id="trackCount" class="track-count">0 camadas</span>
+      </section>
+      <div class="studio-grid">
+        <div class="studio-left">
+          <section class="transport-panel">
+            <div class="player-timing"><span id="transportState" class="transport-state"><span class="neutral-dot"></span> PRONTO PARA GRAVAR</span><span id="timerLabel" class="time-label">00:00.0</span></div>
+            <div class="master-wave" aria-hidden="true"><canvas id="masterCanvas" height="125"></canvas><div class="wave-playline" id="wavePlayline"></div></div>
+            <div id="loopControls" class="loop-settings hidden">
+              <div class="setting-block"><label for="bpmInput">Ritmo (BPM)</label><div class="bpm-control"><button id="bpmDown" aria-label="Diminuir BPM">−</button><input type="number" id="bpmInput" min="40" max="240" step="1" value="100" /><button id="bpmUp" aria-label="Aumentar BPM">＋</button></div></div>
+              <div class="setting-block"><label for="barsSelect">Compassos (4/4)</label><select id="barsSelect"><option value="1">1 compasso</option><option value="2" selected>2 compassos</option><option value="4">4 compassos</option><option value="8">8 compassos</option><option value="16">16 compassos</option></select></div>
+              <div class="loop-duration"><small>Duração do loop</small><strong id="loopDuration">4,8s</strong></div>
+            </div>
+            <div id="countdownView" class="countdown-view hidden" aria-live="polite"><span id="countdownValue">3</span><small>Prepare a voz...</small></div>
+            <div class="transport-buttons">
+              <button id="playBtn" class="play-button" title="Tocar todas as camadas" aria-label="Tocar todas as camadas"><span id="playIcon">▶</span></button>
+              <button id="recordBtn" class="record-button" aria-label="Gravar nova camada"><span id="recordSymbol"></span></button>
+              <button id="stopBtn" class="stop-button" title="Parar" aria-label="Parar"><span></span></button>
+            </div>
+            <p id="recordHint" class="record-hint">Toque no botão vermelho para gravar a primeira camada.</p>
+            <div class="headphone-tip"><span>🎧</span><span>Use fones de ouvido para gravar por cima sem o microfone captar as outras camadas.</span></div>
+          </section>
+          <section class="footer-tools"><button id="renameTrackBtn" class="tool-link" hidden>✎ Renomear última camada</button><span id="engineInfo" class="engine-info">Áudio local • sem upload</span></section>
+        </div>
+        <section class="tracks-panel">
+          <div class="tracks-heading"><div><h2>Camadas</h2><p>Uma voz de cada vez, tudo junto no final.</p></div><div class="layer-stack" aria-hidden="true"><span></span><span></span><span></span></div></div>
+          <div id="tracksList" class="tracks-list"></div>
+          <div id="emptyTracks" class="empty-tracks"><div class="empty-icon">♫</div><strong>Seu som começa aqui</strong><p>Grave a primeira voz ou batida. Depois, é só adicionar outra por cima.</p></div>
+        </section>
+      </div>
+      <p class="privacy-note">As gravações ficam apenas neste navegador/dispositivo. Faça um backup antes de limpar os dados do navegador ou trocar de celular.</p>
+    </main>
+  </div>
+
+  <dialog id="newDialog" class="modal">
+    <form id="newProjectForm" class="modal-body">
+      <div class="modal-top"><span class="modal-symbol">♫</span><button class="modal-close" value="cancel" type="button" data-close-dialog="newDialog" aria-label="Fechar">✕</button></div>
+      <h2>Nova música</h2><p>Escolha como você quer criar.</p>
+      <label class="field-label" for="newProjectName">Nome do projeto</label><input id="newProjectName" class="text-input" maxlength="70" placeholder="Minha obra-prima" value="Minha música" required />
+      <div class="field-label">Tipo de gravação</div>
+      <div class="mode-options">
+        <label class="mode-option"><input type="radio" name="recordingMode" value="free" checked /><span class="mode-content"><span class="mode-icon">〰</span><strong>Gravação livre</strong><small>Grave músicas inteiras, sem limite de duração definido.</small></span></label>
+        <label class="mode-option"><input type="radio" name="recordingMode" value="loop" /><span class="mode-content"><span class="mode-icon">↻</span><strong>Loops</strong><small>Grave trechos curtos que ficam repetindo no ritmo.</small></span></label>
+      </div>
+      <button class="button button-primary button-full" type="submit">Criar projeto <span aria-hidden="true">→</span></button>
+    </form>
+  </dialog>
+
+  <dialog id="exportDialog" class="modal">
+    <div class="modal-body"><div class="modal-top"><span class="modal-symbol">↗</span><button class="modal-close" type="button" data-close-dialog="exportDialog" aria-label="Fechar">✕</button></div>
+      <h2>Exportar mixagem</h2><p>Vamos combinar as camadas em um arquivo WAV de alta qualidade.</p>
+      <div id="exportLoopsControl" class="hidden"><label class="field-label" for="exportLoops">Quantas voltas do loop?</label><select id="exportLoops" class="full-select"><option value="1">1 repetição</option><option value="2">2 repetições</option><option value="4" selected>4 repetições</option><option value="8">8 repetições</option><option value="16">16 repetições</option></select></div>
+      <p id="exportDescription" class="export-description"></p>
+      <button id="exportConfirmBtn" class="button button-primary button-full">Baixar áudio .WAV</button>
+      <p class="modal-fineprint">Sem marca d'água. Todo o processamento acontece no seu dispositivo.</p>
+    </div>
+  </dialog>
+
+  <dialog id="helpDialog" class="modal">
+    <div class="modal-body"><div class="modal-top"><span class="modal-symbol">?</span><button class="modal-close" type="button" data-close-dialog="helpDialog" aria-label="Fechar">✕</button></div>
+      <h2>Como usar</h2>
+      <div class="help-text"><p><strong>1. Comece:</strong> crie uma música em modo livre ou loops. No modo loop, escolha o BPM e os compassos antes de gravar.</p><p><strong>2. Grave:</strong> permita acesso ao microfone. Você ouve uma contagem e então grava sua voz. O loop termina sozinho; na gravação livre, toque em parar.</p><p><strong>3. Acrescente:</strong> toque em gravar de novo. As camadas anteriores tocam no fone enquanto a nova voz é capturada, alinhada desde o início.</p><p><strong>4. Ajuste:</strong> mude volume, silencie ou desloque cada camada alguns milissegundos para corrigir a sincronização.</p><p><strong>5. Exporte:</strong> baixe a mixagem em WAV. Use <strong>Backup</strong> para guardar o projeto editável e importe o arquivo na página inicial.</p><p><strong>Importante:</strong> os dados são locais; evite chamadas telefônicas e mantenha a página aberta durante a gravação. A precisão depende do dispositivo e da conexão de áudio.</p></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <input id="importInput" type="file" accept=".json,application/json" hidden />
+</body>
+</html>
